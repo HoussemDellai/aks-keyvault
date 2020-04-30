@@ -1,0 +1,7 @@
+apiVersion: aadpodidentity.k8s.io/v1
+kind: AzureIdentityBinding
+metadata:
+  name: azure-identity-binding-kv
+spec:
+  azureIdentity: azure-identity-kv
+  selector: azure-kv # Used by any pod requesting access to Key Vault through CSI.
