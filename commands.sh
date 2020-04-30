@@ -173,12 +173,12 @@ azureidentity.aadpodidentity.k8s.io/azure-identity-kv created
  $ kubectl create -f aadpodidentitybinding.yaml
 azureidentitybinding.aadpodidentity.k8s.io/azure-identity-binding-kv created
 
-# 4. Test KV
-# 4.1. Deplloy the test app
+# 5. Access Key Vault secrets from a Pod in AKS
+# 5.1. Deplloy an Nginx Pod for testing
  $ kubectl create -f nginx-secrets-pod.yaml
 pod/nginx-secrets-store created
 
-# 4.2. Validate the pod has access to the secret from key vault:
+# 5.2. Validate the pod has access to the secrets from key vault:
  $ kubectl exec -it nginx-secrets-store ls /mnt/secrets-store/
 DATABASE_LOGIN  DATABASE_PASSWORD
  $ kubectl exec -it nginx-secrets-store cat /mnt/secrets-store/DATABASE_PASSWORD
