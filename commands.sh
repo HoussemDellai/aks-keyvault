@@ -139,51 +139,7 @@ nmi-64gfh              1/1     Running   0          7s
   "name": "az-key-vault-demo",
   "properties": {
     "accessPolicies": [
-      {
-        "applicationId": null,
-        "objectId": "9c1706eb-db28-4105-b993-f93a83f974b8",
-        "permissions": {
-          "certificates": [
-            "Get",
-            "List",
-            "Update",
-            "Create",
-            "Import",
-            "Delete",
-            "Recover",
-            "Backup",
-            "Restore",
-            "ManageContacts",
-            "ManageIssuers",
-            "GetIssuers",
-            "ListIssuers",
-            "SetIssuers",
-            "DeleteIssuers"
-          ],
-          "keys": [
-            "Get",
-            "List",
-            "Update",
-            "Create",
-            "Import",
-            "Delete",
-            "Recover",
-            "Backup",
-            "Restore"
-          ],
-          "secrets": [
-            "Get",
-            "List",
-            "Set",
-            "Delete",
-            "Recover",
-            "Backup",
-            "Restore"
-          ],
-          "storage": null
-        },
-        "tenantId": "<YOUR_AZURE_TENANT_ID>"
-      },
+      { removed-for-brievety }
       {
         "applicationId": null,
         "objectId": "f8bb59bd-b704-4274-8391-3b0791d7a02c",
@@ -197,27 +153,7 @@ nmi-64gfh              1/1     Running   0          7s
         },
         "tenantId": "<YOUR_AZURE_TENANT_ID>"
       }
-    ],
-    "createMode": null,
-    "enablePurgeProtection": null,
-    "enableRbacAuthorization": false,
-    "enableSoftDelete": null,
-    "enabledForDeployment": false,
-    "enabledForDiskEncryption": false,
-    "enabledForTemplateDeployment": false,
-    "networkAcls": null,
-    "privateEndpointConnections": null,
-    "provisioningState": "Succeeded",
-    "sku": {
-      "name": "standard"
-    },
-    "softDeleteRetentionInDays": null,
-    "tenantId": "<YOUR_AZURE_TENANT_ID>",
-    "vaultUri": "https://az-key-vault-demo.vault.azure.net/"
-  },
-  "resourceGroup": "rg-demo",
-  "tags": {},
-  "type": "Microsoft.KeyVault/vaults"
+    ]
 }
 
 # To set policy to access keys in your keyvault
