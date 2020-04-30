@@ -1,8 +1,0 @@
-apiVersion: aadpodidentity.k8s.io/v1
-kind: AzureIdentity
-metadata:
-  name: kv-azure-identity
-spec:
-  type: 0
-  resourceID: /subscriptions/<YOUR_AZURE_SUBSCRIPTION_ID>/resourcegroups/aks-k8s-2020/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aks-k8s-2020-identity
-  clientID: "179b59a2-a42e-47ad-9c3e-e8c42947fa7c"
