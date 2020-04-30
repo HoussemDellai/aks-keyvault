@@ -7,12 +7,12 @@
 #    DatabasePassword: MyP@ssword123456
 
 # Steps from: https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage
-# 1. Install the Secrets Store CSI Driver
-# 1.1. Add Helm repo
+# 1. Installing Secrets Store CSI Driver and Key Vault Provider
+# 1.1. Adding Helm repo
 helm repo add secrets-store-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/charts
  $ kubectl create ns csi-driver
 namespace/csi-driver created
-# 1.2. Install Secrets Store CSI Driver using Helm
+# 1.2. Installing Secrets Store CSI Driver using Helm
  $ helm install csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver --namespace csi-driver
 NAME: csi-secrets-store
 LAST DEPLOYED: Wed Apr 29 14:54:22 2020
@@ -32,8 +32,7 @@ to create a SecretProviderClass resource, and a deployment using the SecretProvi
 NAME                                               READY   STATUS    RESTARTS   AGE
 csi-secrets-store-secrets-store-csi-driver-9mgrl   3/3     Running   0          2m13s
 
-# 1.3. Install the Secrets Store CSI Driver with Azure Key Vault Provider
-# [REQUIRED FOR AZURE PROVIDER]
+# 1.3. Installing Secrets Store CSI Driver with Azure Key Vault Provider
  $ kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer.yaml --namespace csi-driver
 daemonset.apps/csi-secrets-store-provider-azure created
 # You should see the provider pods running on each agent node:
@@ -50,7 +49,7 @@ csi-secrets-store-secrets-store-csi-driver-9mgrl   3/3     Running   0          
 secretproviderclass.secrets-store.csi.x-k8s.io/secret-provider-kv created
 # Note: Hashicorp Vault is also supported.
 
-# 3. Provide Identity to Access Key Vault using Pod Identity
+# 3. Installing Pod Identity and providing access to Key Vault
 
 # The Azure Key Vault Provider offers four modes for accessing a Key Vault instance:
 #   Service Principal
@@ -59,7 +58,7 @@ secretproviderclass.secrets-store.csi.x-k8s.io/secret-provider-kv created
 #   VMSS System Assigned Managed Identity
 # Here we'll be using Pod Identity.
 
-# 3.1. Install the aad-pod-identity components to your cluster
+# 3.1. Installing AAD Pod Identity into AKS
 The cluster here have RBAC enabled
  $ kubectl apply -f https://raw.githubusercontent.com/Azure/aad-pod-identity/master/deploy/infra/deployment-rbac.yaml
 serviceaccount/aad-pod-id-nmi-service-account created
@@ -80,7 +79,7 @@ mic-76dd75ddf9-59vgm   1/1     Running   0          6s
 mic-76dd75ddf9-qrvr4   1/1     Running   0          6s
 nmi-64gfh              1/1     Running   0          7s
 
-# 3.2. Create an Azure User Identity
+# 3.2. Creating Azure User Identity
 # Create an Azure User Identity with the following command. Get clientId and id from the output.
  $ az identity create -g rg-demo -n identity-aks-kv
 {
@@ -96,7 +95,7 @@ nmi-64gfh              1/1     Running   0          7s
   "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
 }
 
-# 3.3. # Assign Reader Role to new Identity for your keyvault
+# 3.3. # Assigning Reader Role to new Identity for your keyvault
  $ az role assignment create --role Reader --assignee "f8bb59bd-b704-4274-8391-3b0791d7a02c" --scope /subscriptions/<YOUR_AZURE_SUBSCRIPTION_ID>/resourcegroups/rg-demo/providers/Microsoft.KeyVault/vaults/az-key-vault-demo
 {
   "canDelegate": null,
@@ -131,7 +130,7 @@ nmi-64gfh              1/1     Running   0          7s
   "type": "Microsoft.Authorization/roleAssignments"
 }
 
-# 3.5. Set policy to access secrets in your keyvault
+# 3.5. Setting policy to access secrets in Key Vault
  $ az keyvault set-policy -n  az-key-vault-demo --secret-permissions get --spn "a0c038fd-3df3-4eaf-bb34-abdd4f78a0db"
 {
   "id": "/subscriptions/<YOUR_AZURE_SUBSCRIPTION_ID>/resourceGroups/rg-demo/providers/Microsoft.KeyVault/vaults/az-key-vault-demo",
@@ -161,24 +160,24 @@ nmi-64gfh              1/1     Running   0          7s
 # To set policy to access certs in your keyvault
 # az keyvault set-policy -n $KV_NAME --certificate-permissions get --spn <YOUR AZURE USER IDENTITY CLIENT ID>
 
-# 4. Add AzureIdentity and AzureIdentityBinding
-# 4.1 Add a new AzureIdentity for the new identity to your cluster
+# 4. Adding AzureIdentity and AzureIdentityBinding
+# 4.1 Adding a new AzureIdentity for the new identity to your cluster
 # Edit and save this as aadpodidentity.yaml
 # Set type: 0 for Managed Service Identity; type: 1 for Service Principal In this case, we are using managed service identity, type: 0. Create a new name for the AzureIdentity. Set resourceID to id of the Azure User Identity created from the previous step.
  $ kubectl create -f aadpodidentity.yaml
 azureidentity.aadpodidentity.k8s.io/azure-identity-kv created
 
-# 4.2. Add a new AzureIdentityBinding for the new Azure identity to your cluster
+# 4.2. Adding a new AzureIdentityBinding for the new Azure identity to your cluster
 # Edit and save this as aadpodidentitybinding.yaml
  $ kubectl create -f aadpodidentitybinding.yaml
 azureidentitybinding.aadpodidentity.k8s.io/azure-identity-binding-kv created
 
-# 5. Access Key Vault secrets from a Pod in AKS
-# 5.1. Deplloy an Nginx Pod for testing
+# 5. Accessing Key Vault secrets from a Pod in AKS
+# 5.1. Deplloying an Nginx Pod for testing
  $ kubectl create -f nginx-secrets-pod.yaml
 pod/nginx-secrets-store created
 
-# 5.2. Validate the pod has access to the secrets from key vault:
+# 5.2. Validating the pod has access to the secrets from key vault:
  $ kubectl exec -it nginx-secrets-store ls /mnt/secrets-store/
 DATABASE_LOGIN  DATABASE_PASSWORD
  $ kubectl exec -it nginx-secrets-store cat /mnt/secrets-store/DATABASE_PASSWORD
