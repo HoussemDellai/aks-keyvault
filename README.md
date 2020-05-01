@@ -1,7 +1,7 @@
 # aks-keyvault
 Access Azure Key Vault secrets, keys and certs from AKS Pods using Secret Store CSI provider and Pod Identity.
 
-<img src="https://raw.githubusercontent.com/HoussemDellai/aks-keyvault/master/architecture.png" width="80%">  
+<img src="https://raw.githubusercontent.com/HoussemDellai/aks-keyvault/master/architecture.png" width="100%">  
 
 echo "Setting up the variables..."  
 $subscriptionId = (az account show | ConvertFrom-Json).id  
