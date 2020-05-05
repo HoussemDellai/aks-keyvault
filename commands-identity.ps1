@@ -1,5 +1,5 @@
 echo "Setting up the variables..."
-$suffix = "demo013"
+$suffix = "demo015"
 $subscriptionId = (az account show | ConvertFrom-Json).id
 $tenantId = (az account show | ConvertFrom-Json).tenantId
 $location = "westeurope"
@@ -14,7 +14,7 @@ $identityName = "identity-aks-kv"
 $identitySelector = "azure-kv"
 $secretProviderClassName = "secret-provider-kv"
 $acrName = "acrforaks" + $suffix
-$isAKSWithManagedIdentity = "true"
+$isAKSWithManagedIdentity = "false"
 
 # echo "Creating Resource Group..."
 $resourceGroup = az group create -n $resourceGroupName -l $location | ConvertFrom-Json
@@ -23,8 +23,13 @@ $resourceGroup = az group create -n $resourceGroupName -l $location | ConvertFro
 $acr = az acr create --resource-group $resourceGroupName --name $acrName --sku Basic | ConvertFrom-Json
 az acr login -n $acrName --expose-token
 
-# echo "Creating AKS cluster..." # doesn't work with AKS with Managed Identity!
-$aks = az aks create -n $aksName -g $resourceGroupName --enable-managed-identity --kubernetes-version 1.17.3 --node-count 1 --attach-acr $acrName | ConvertFrom-Json
+If ($isAKSWithManagedIdentity -eq "true") {
+echo "Creating AKS cluster with Managed Identity..."
+$aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version 1.17.3 --node-count 1 --attach-acr $acrName  --enable-managed-identity | ConvertFrom-Json
+} Else {
+echo "Creating AKS cluster with Service Principal..."
+$aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version 1.17.3 --node-count 1 --attach-acr $acrName | ConvertFrom-Json
+}
 # retrieve existing AKS
 $aks = (az aks show -n $aksName -g $resourceGroupName | ConvertFrom-Json)
 
@@ -110,7 +115,7 @@ echo "Assigning Reader Role to new Identity for Key Vault..."
 az role assignment create --role "Reader" --assignee $identity.principalId --scope $keyVault.id
 
 # Run the following command only if using AKS with Service Principal
-If (-NOT  ($isAKSWithManagedIdentity -eq "true")) {
+If ($isAKSWithManagedIdentity -eq "false") {
 echo "Providing required permissions for MIC..."
 az role assignment create --role "Managed Identity Operator" --assignee $aks.servicePrincipalProfile.clientId --scope $identity.id
 }
@@ -173,4 +178,7 @@ kubectl exec -it nginx-secrets-store cat /mnt/secrets-store/DATABASE_LOGIN
 kubectl exec -it nginx-secrets-store cat /mnt/secrets-store/$secret1Alias
 kubectl exec -it nginx-secrets-store cat /mnt/secrets-store/DATABASE_PASSWORD
 kubectl exec -it nginx-secrets-store cat /mnt/secrets-store/$secret2Alias
- 
+
+# Testing ACR and AKS authN
+# az acr build -t productsstore:0.1 -r $acrName .\ProductsStoreOnKubernetes\MvcApp\
+# kubectl run --image=$acrName.azurecr.io/productsstore:0.1 prodstore --generator=run-pod/v1
