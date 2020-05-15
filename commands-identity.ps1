@@ -1,5 +1,5 @@
 echo "Setting up the variables..."
-$suffix = "demo015"
+$suffix = "demo03"
 $subscriptionId = (az account show | ConvertFrom-Json).id
 $tenantId = (az account show | ConvertFrom-Json).tenantId
 $location = "westeurope"
@@ -14,7 +14,7 @@ $identityName = "identity-aks-kv"
 $identitySelector = "azure-kv"
 $secretProviderClassName = "secret-provider-kv"
 $acrName = "acrforaks" + $suffix
-$isAKSWithManagedIdentity = "false"
+$isAKSWithManagedIdentity = "true"
 
 # echo "Creating Resource Group..."
 $resourceGroup = az group create -n $resourceGroupName -l $location | ConvertFrom-Json
@@ -44,16 +44,12 @@ echo "Creating Secrets in Key Vault..."
 az keyvault secret set --name $secret1Name --value "Houssem" --vault-name $keyVaultName
 az keyvault secret set --name $secret2Name --value "P@ssword123456" --vault-name $keyVaultName
 
-echo "Adding Helm repo for Secret Store CSI..."
-helm repo add secrets-store-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/charts
-
-echo "Installing Secrets Store CSI Driver using Helm..."
+# echo "Installing Secrets Store CSI Driver using Helm..."
 kubectl create ns csi-driver
-helm install csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver --namespace csi-driver
-kubectl get pods --namespace=csi-driver
-
 echo "Installing Secrets Store CSI Driver with Azure Key Vault Provider..."
-kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer.yaml --namespace csi-driver
+helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts
+helm install csi-azure csi-secrets-store-provider-azure/csi-secrets-store-provider-azure --namespace csi-driver
+sleep 2
 kubectl get pods -n csi-driver
 
 echo "Using the Azure Key Vault Provider..."
@@ -170,6 +166,7 @@ spec:
 "@
 $nginxPod | kubectl apply -f -
 
+sleep 10
 kubectl get pods
 
 echo "Validating the pod has access to the secrets from Key Vault..."
@@ -182,3 +179,7 @@ kubectl exec -it nginx-secrets-store cat /mnt/secrets-store/$secret2Alias
 # Testing ACR and AKS authN
 # az acr build -t productsstore:0.1 -r $acrName .\ProductsStoreOnKubernetes\MvcApp\
 # kubectl run --image=$acrName.azurecr.io/productsstore:0.1 prodstore --generator=run-pod/v1
+
+# clean up resources 
+# az group delete --no-wait -n $resourceGroupName
+# az group delete --no-wait -n $aks.nodeResourceGroup
