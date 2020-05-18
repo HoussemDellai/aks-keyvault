@@ -1,10 +1,11 @@
 echo "Setting up the variables..."
-$suffix = "demo03"
+$suffix = "demo06"
 $subscriptionId = (az account show | ConvertFrom-Json).id
 $tenantId = (az account show | ConvertFrom-Json).tenantId
-$location = "westeurope"
+$location = "westeurope" # "uksouth" # 
 $resourceGroupName = "rg-" + $suffix
 $aksName = "aks-" + $suffix
+$aksVersion = "1.17.3"
 $keyVaultName = "keyvaultaks" + $suffix
 $secret1Name = "DatabaseLogin"
 $secret2Name = "DatabasePassword"
@@ -19,22 +20,22 @@ $isAKSWithManagedIdentity = "true"
 # echo "Creating Resource Group..."
 $resourceGroup = az group create -n $resourceGroupName -l $location | ConvertFrom-Json
 
-# echo "Createing ACR..."
+# echo "Creating ACR..."
 $acr = az acr create --resource-group $resourceGroupName --name $acrName --sku Basic | ConvertFrom-Json
 az acr login -n $acrName --expose-token
 
 If ($isAKSWithManagedIdentity -eq "true") {
 echo "Creating AKS cluster with Managed Identity..."
-$aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version 1.17.3 --node-count 1 --attach-acr $acrName  --enable-managed-identity | ConvertFrom-Json
+$aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version $aksVersion --node-count 1 --attach-acr $acrName --enable-managed-identity | ConvertFrom-Json
 } Else {
 echo "Creating AKS cluster with Service Principal..."
-$aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version 1.17.3 --node-count 1 --attach-acr $acrName | ConvertFrom-Json
+$aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version $aksVersion --node-count 1 --attach-acr $acrName | ConvertFrom-Json
 }
 # retrieve existing AKS
 $aks = (az aks show -n $aksName -g $resourceGroupName | ConvertFrom-Json)
 
 # echo "Connecting/athenticating to AKS..."
-az aks get-credentials -n $aksName -g $resourceGroupName
+az aks get-credentials -n $aksName -g $resourceGroupName --overwrite-existing
 
 echo "Creating Key Vault..."
 $keyVault = az keyvault create -n $keyVaultName -g $resourceGroupName -l $location --enable-soft-delete true --retention-days 7 | ConvertFrom-Json
@@ -93,7 +94,9 @@ az role assignment create --role "Virtual Machine Contributor" --assignee $aks.i
 }
 
 echo "Installing AAD Pod Identity into AKS..."
-kubectl apply -f https://raw.githubusercontent.com/Azure/aad-pod-identity/master/deploy/infra/deployment-rbac.yaml
+helm repo add aad-pod-identity https://raw.githubusercontent.com/Azure/aad-pod-identity/master/charts
+helm install pod-identity aad-pod-identity/aad-pod-identity
+# kubectl apply -f https://raw.githubusercontent.com/Azure/aad-pod-identity/master/deploy/infra/deployment-rbac.yaml
 kubectl get pods
 
 # If using AKS with Managed Identity, retrieve the existing Identity
@@ -181,5 +184,6 @@ kubectl exec -it nginx-secrets-store cat /mnt/secrets-store/$secret2Alias
 # kubectl run --image=$acrName.azurecr.io/productsstore:0.1 prodstore --generator=run-pod/v1
 
 # clean up resources 
-# az group delete --no-wait -n $resourceGroupName
-# az group delete --no-wait -n $aks.nodeResourceGroup
+# az keyvault purge -n $keyVaultName
+# az group delete --no-wait --yes -n $resourceGroupName
+# az group delete --no-wait --yes -n $aks.nodeResourceGroup
