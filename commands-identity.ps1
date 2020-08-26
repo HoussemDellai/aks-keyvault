@@ -1,5 +1,5 @@
 echo "Setting up the variables..."
-$suffix = "demo0102"
+$suffix = "demo0109"
 $subscriptionId = (az account show | ConvertFrom-Json).id
 $tenantId = (az account show | ConvertFrom-Json).tenantId
 $location = "westeurope" # "uksouth" # 
@@ -17,13 +17,14 @@ $secretProviderClassName = "secret-provider-kv"
 $acrName = "acrforaks" + $suffix
 $isAKSWithManagedIdentity = "true"
 
-# echo "Creating Resource Group..."
+echo "Creating Resource Group..."
 $resourceGroup = az group create -n $resourceGroupName -l $location | ConvertFrom-Json
 
-# echo "Creating ACR..."
+echo "Creating ACR..."
 $acr = az acr create --resource-group $resourceGroupName --name $acrName --sku Basic | ConvertFrom-Json
 az acr login -n $acrName --expose-token
 
+echo "Creating AKS..."
 If ($isAKSWithManagedIdentity -eq "true") {
   echo "Creating AKS cluster with Managed Identity..."
   $aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version $aksVersion --node-count 1 --attach-acr $acrName --enable-managed-identity | ConvertFrom-Json
@@ -34,18 +35,17 @@ If ($isAKSWithManagedIdentity -eq "true") {
 # retrieve existing AKS
 $aks = (az aks show -n $aksName -g $resourceGroupName | ConvertFrom-Json)
 
-# echo "Connecting/athenticating to AKS..."
+echo "Connecting/authenticating to AKS..."
 az aks get-credentials -n $aksName -g $resourceGroupName --overwrite-existing
 
 echo "Creating Key Vault..."
 $keyVault = az keyvault create -n $keyVaultName -g $resourceGroupName -l $location --enable-soft-delete true --retention-days 7 | ConvertFrom-Json
-# $keyVault = az keyvault show -n $keyVaultName | ConvertFrom-Json # retrieve existing KV
 
 echo "Creating Secrets in Key Vault..."
 az keyvault secret set --name $secret1Name --value "Houssem" --vault-name $keyVaultName
 az keyvault secret set --name $secret2Name --value "P@ssword123456" --vault-name $keyVaultName
 
-# echo "Installing Secrets Store CSI Driver using Helm..."
+echo "Installing Secrets Store CSI Driver using Helm..."
 kubectl create ns csi-driver
 echo "Installing Secrets Store CSI Driver with Azure Key Vault Provider..."
 helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts
