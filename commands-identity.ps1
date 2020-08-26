@@ -1,11 +1,11 @@
 echo "Setting up the variables..."
-$suffix = "demo06"
+$suffix = "demo07"
 $subscriptionId = (az account show | ConvertFrom-Json).id
 $tenantId = (az account show | ConvertFrom-Json).tenantId
 $location = "westeurope" # "uksouth" # 
 $resourceGroupName = "rg-" + $suffix
 $aksName = "aks-" + $suffix
-$aksVersion = "1.17.3"
+$aksVersion = "1.18.6"
 $keyVaultName = "keyvaultaks" + $suffix
 $secret1Name = "DatabaseLogin"
 $secret2Name = "DatabasePassword"
@@ -173,11 +173,11 @@ sleep 10
 kubectl get pods
 
 echo "Validating the pod has access to the secrets from Key Vault..."
-kubectl exec -it nginx-secrets-store ls /mnt/secrets-store/
-kubectl exec -it nginx-secrets-store cat /mnt/secrets-store/DATABASE_LOGIN
-kubectl exec -it nginx-secrets-store cat /mnt/secrets-store/$secret1Alias
-kubectl exec -it nginx-secrets-store cat /mnt/secrets-store/DATABASE_PASSWORD
-kubectl exec -it nginx-secrets-store cat /mnt/secrets-store/$secret2Alias
+kubectl exec -it nginx-secrets-store -- ls /mnt/secrets-store/
+kubectl exec -it nginx-secrets-store -- cat /mnt/secrets-store/DATABASE_LOGIN
+kubectl exec -it nginx-secrets-store -- cat /mnt/secrets-store/$secret1Alias
+kubectl exec -it nginx-secrets-store -- cat /mnt/secrets-store/DATABASE_PASSWORD
+kubectl exec -it nginx-secrets-store -- cat /mnt/secrets-store/$secret2Alias
 
 # Testing ACR and AKS authN
 # az acr build -t productsstore:0.1 -r $acrName .\ProductsStoreOnKubernetes\MvcApp\

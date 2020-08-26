@@ -19,7 +19,7 @@ $isAKSWithManagedIdentity = "false"
 # echo "Creating Resource Group..."
 $resourceGroup = az group create -n $resourceGroupName -l $location | ConvertFrom-Json
 
-# echo "Createing ACR..."
+# echo "Creating ACR..."
 $acr = az acr create --resource-group $resourceGroupName --name $acrName --sku Basic | ConvertFrom-Json
 az acr login -n $acrName --expose-token
 
@@ -30,7 +30,7 @@ $aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version 1.17
 echo "Creating AKS cluster with Service Principal..."
 $aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version 1.17.3 --node-count 1 --attach-acr $acrName | ConvertFrom-Json
 }
-# retrieve existing AKS
+# retrieve the existing or created AKS
 $aks = (az aks show -n $aksName -g $resourceGroupName | ConvertFrom-Json)
 
 # echo "Connecting/athenticating to AKS..."
