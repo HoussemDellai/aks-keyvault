@@ -1,5 +1,5 @@
 echo "Setting up the variables..."
-$suffix = "demo08"
+$suffix = "demo0102"
 $subscriptionId = (az account show | ConvertFrom-Json).id
 $tenantId = (az account show | ConvertFrom-Json).tenantId
 $location = "westeurope" # "uksouth" # 
@@ -25,11 +25,11 @@ $acr = az acr create --resource-group $resourceGroupName --name $acrName --sku B
 az acr login -n $acrName --expose-token
 
 If ($isAKSWithManagedIdentity -eq "true") {
-echo "Creating AKS cluster with Managed Identity..."
-$aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version $aksVersion --node-count 1 --attach-acr $acrName --enable-managed-identity | ConvertFrom-Json
+  echo "Creating AKS cluster with Managed Identity..."
+  $aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version $aksVersion --node-count 1 --attach-acr $acrName --enable-managed-identity | ConvertFrom-Json
 } Else {
-echo "Creating AKS cluster with Service Principal..."
-$aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version $aksVersion --node-count 1 --attach-acr $acrName | ConvertFrom-Json
+  echo "Creating AKS cluster with Service Principal..."
+  $aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version $aksVersion --node-count 1 --attach-acr $acrName | ConvertFrom-Json
 }
 # retrieve existing AKS
 $aks = (az aks show -n $aksName -g $resourceGroupName | ConvertFrom-Json)
@@ -87,10 +87,10 @@ $secretProviderKV | kubectl create -f -
 
 # Run the following 2 commands only if using AKS with Managed Identity
 If ($isAKSWithManagedIdentity -eq "true") {
-az role assignment create --role "Managed Identity Operator" --assignee $aks.identityProfile.kubeletidentity.clientId --scope /subscriptions/$subscriptionId/resourcegroups/$($aks.nodeResourceGroup)
-az role assignment create --role "Virtual Machine Contributor" --assignee $aks.identityProfile.kubeletidentity.clientId --scope /subscriptions/$subscriptionId/resourcegroups/$($aks.nodeResourceGroup)
-# If user-assigned identities that are not within the cluster resource group
-# az role assignment create --role "Managed Identity Operator" --assignee $aks.identityProfile.kubeletidentity.clientId --scope /subscriptions/$subscriptionId/resourcegroups/$resourceGroupName
+  az role assignment create --role "Managed Identity Operator" --assignee $aks.identityProfile.kubeletidentity.clientId --scope /subscriptions/$subscriptionId/resourcegroups/$($aks.nodeResourceGroup)
+  az role assignment create --role "Virtual Machine Contributor" --assignee $aks.identityProfile.kubeletidentity.clientId --scope /subscriptions/$subscriptionId/resourcegroups/$($aks.nodeResourceGroup)
+  # If user-assigned identities that are not within the cluster resource group
+  # az role assignment create --role "Managed Identity Operator" --assignee $aks.identityProfile.kubeletidentity.clientId --scope /subscriptions/$subscriptionId/resourcegroups/$resourceGroupName
 }
 
 echo "Installing AAD Pod Identity into AKS..."
@@ -101,16 +101,16 @@ kubectl get pods
 
 # If using AKS with Managed Identity, retrieve the existing Identity
 If ($isAKSWithManagedIdentity -eq "true") {
-echo "Retrieving the existing Azure Identity..."
+  echo "Retrieving the existing Azure Identity..."
   while($existingIdentity -eq $null) {
     echo "Retrying until Identity is ready..."
     $existingIdentity = az resource list -g $aks.nodeResourceGroup --query "[?contains(type, 'Microsoft.ManagedIdentity/userAssignedIdentities')]"  | ConvertFrom-Json
   }
-$identity = az identity show -n $existingIdentity.name -g $existingIdentity.resourceGroup | ConvertFrom-Json
+  $identity = az identity show -n $existingIdentity.name -g $existingIdentity.resourceGroup | ConvertFrom-Json
 } Else {
-# If using AKS with Service Principal, create new Identity
-echo "Creating an Azure Identity..."
-$identity = az identity create -g $resourceGroupName -n $identityName | ConvertFrom-Json
+  # If using AKS with Service Principal, create new Identity
+  echo "Creating an Azure Identity..."
+  $identity = az identity create -g $resourceGroupName -n $identityName | ConvertFrom-Json
 }
 
 echo "Assigning Reader Role to new Identity for Key Vault..."
@@ -118,8 +118,8 @@ az role assignment create --role "Reader" --assignee $identity.principalId --sco
 
 # Run the following command only if using AKS with Service Principal
 If ($isAKSWithManagedIdentity -eq "false") {
-echo "Providing required permissions for MIC..."
-az role assignment create --role "Managed Identity Operator" --assignee $aks.servicePrincipalProfile.clientId --scope $identity.id
+  echo "Providing required permissions for MIC..."
+  az role assignment create --role "Managed Identity Operator" --assignee $aks.servicePrincipalProfile.clientId --scope $identity.id
 }
 
 echo "Setting policy to access secrets in Key Vault..."
@@ -172,7 +172,7 @@ spec:
 "@
 $nginxPod | kubectl apply -f -
 
-sleep 10
+sleep 20
 kubectl get pods
 
 echo "Validating the pod has access to the secrets from Key Vault..."
