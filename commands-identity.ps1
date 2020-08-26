@@ -1,5 +1,5 @@
 echo "Setting up the variables..."
-$suffix = "demo07"
+$suffix = "demo08"
 $subscriptionId = (az account show | ConvertFrom-Json).id
 $tenantId = (az account show | ConvertFrom-Json).tenantId
 $location = "westeurope" # "uksouth" # 
@@ -102,7 +102,10 @@ kubectl get pods
 # If using AKS with Managed Identity, retrieve the existing Identity
 If ($isAKSWithManagedIdentity -eq "true") {
 echo "Retrieving the existing Azure Identity..."
-$existingIdentity = az resource list -g $aks.nodeResourceGroup --query "[?contains(type, 'Microsoft.ManagedIdentity/userAssignedIdentities')]"  | ConvertFrom-Json
+  while($existingIdentity -eq $null) {
+    echo "Retrying until Identity is ready..."
+    $existingIdentity = az resource list -g $aks.nodeResourceGroup --query "[?contains(type, 'Microsoft.ManagedIdentity/userAssignedIdentities')]"  | ConvertFrom-Json
+  }
 $identity = az identity show -n $existingIdentity.name -g $existingIdentity.resourceGroup | ConvertFrom-Json
 } Else {
 # If using AKS with Service Principal, create new Identity
