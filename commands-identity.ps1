@@ -1,5 +1,5 @@
 echo "Setting up the variables..."
-$suffix = "demo0109"
+$suffix = "demo001"
 $subscriptionId = (az account show | ConvertFrom-Json).id
 $tenantId = (az account show | ConvertFrom-Json).tenantId
 $location = "westeurope" # "uksouth" # 
