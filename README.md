@@ -67,7 +67,7 @@ $aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version $aks
 }
 # retrieve the existing or created AKS
 $aks = (az aks show -n $aksName -g $resourceGroupName | ConvertFrom-Json)
-# echo "Connecting/athenticating to AKS..."
+# echo "Connecting/authenticating to AKS..."
 az aks get-credentials -n $aksName -g $resourceGroupName
 echo "Creating Key Vault..."
 $keyVault = az keyvault create -n $keyVaultName -g $resourceGroupName -l $location --enable-soft-delete true --retention-days 7 | ConvertFrom-Json
